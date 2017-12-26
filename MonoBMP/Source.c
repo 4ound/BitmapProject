@@ -1,6 +1,7 @@
 #include "FileSys.h"
 #include "Image.h"
 #include "ErrorList.h"
+#include <stdio.h>
 
 BITMAPFILEHEADER bmpHead;
 BITMAPINFOHEADER bmpInfo;
@@ -54,6 +55,8 @@ int main(int argc, char **argv) {
 			break;
 		}
 		case 24: {
+			
+			
 			shift(original, modified, bmpHead.bfOffBits);
 			int padding = bmpInfo.biWidth % 4;
 			for (int i = 0; i < bmpInfo.biHeight; i++) {
