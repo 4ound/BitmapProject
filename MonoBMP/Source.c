@@ -13,18 +13,19 @@ int main(int argc, char **argv) {
 	char *original_path, *modified_path[3];
 	if (argc > 3) ___error(1);
 	get_path(argc, argv, &original_path, modified_path);
-
+	_is_folder_correct(&original_path, modified_path);
 	FILE *original, *modified[3];
-	original = fopen(original_path, "r+b");
-	for (int i = 0; i < N; i++) modified[i] = fopen(modified_path[i], "w+b");
 
 	/*free block*/
-	_is_folder_correct(&original_path, modified_path);
+	original = fopen(original_path, "r+b");
 	free(original_path);
-	for (int i = 0; i < N; i++) free(modified_path[i]);
-	/*end free block*/
 	if (_is_not_opened(original)) ___error(2);
+
+	for (int i = 0; i < N; i++) modified[i] = fopen(modified_path[i], "w+b");
+	for (int i = 0; i < N; i++) free(modified_path[i]);
 	for (int i = 0; i < N; i++) if (_is_not_opened(modified[i])) ___error(3);
+	
+	/*end free block*/
 
 	fread(&bmpHead, sizeof(bmpHead), 1, original);
 	
@@ -43,8 +44,8 @@ int main(int argc, char **argv) {
 					fread(&rgbq, sizeof(rgbq), 1, original);
 
 					BYTE avg[3] = { (rgbq.rgbRed + rgbq.rgbGreen + rgbq.rgbBlue) / 3,
-						(rgbq.rgbRed * r1 + rgbq.rgbGreen * g1 + rgbq.rgbBlue * b1),
-						(rgbq.rgbRed * r2 + rgbq.rgbGreen * g2 + rgbq.rgbBlue * b2) };
+						(rgbq.rgbRed * R1 + rgbq.rgbGreen * G1 + rgbq.rgbBlue * B1),
+						(rgbq.rgbRed * R2 + rgbq.rgbGreen * G2 + rgbq.rgbBlue * B2) };
 
 					RGBQUAD argbq[3] = { GrayQ(avg[0]), GrayQ(avg[1]), GrayQ(avg[2]) };
 
@@ -60,8 +61,8 @@ int main(int argc, char **argv) {
 					fread(&rgb, sizeof(rgb), 1, original);
 
 					BYTE avg[3] = { (rgb.rgbtRed + rgb.rgbtGreen + rgb.rgbtBlue) / 3,
-						(rgb.rgbtRed * r1 + rgb.rgbtGreen * g1 + rgb.rgbtBlue * b1),
-						(rgb.rgbtRed * r2 + rgb.rgbtGreen * g2 + rgb.rgbtBlue * b2) };
+						(rgb.rgbtRed * R1 + rgb.rgbtGreen * G1 + rgb.rgbtBlue * B1),
+						(rgb.rgbtRed * R2 + rgb.rgbtGreen * G2 + rgb.rgbtBlue * B2) };
 
 					RGBTRIPLE argb[3] = { Gray(avg[0]), Gray(avg[1]), Gray(avg[2]) };
 
@@ -72,17 +73,31 @@ int main(int argc, char **argv) {
 			}	
 			break;
 		}
-
+		case 16: {
+			break;
+		}
 		case 8:
 		case 4:
 		case 2:
 		case 1: {
 			int palette = (1 << bmpInfo.biBitCount);
+			
+			fseek(original, bmpHead.bfOffBits - palette * 4, SEEK_SET);
+			
+			for (int k = 0; k < N; k++) {
+				fpos_t  f1, f2;
+				fgetpos(original, &f1);
+				fgetpos(modified[k], &f2);
+				while (f1 != f2) {
+					fwrite(&byte, sizeof(byte), 1, modified[k]);
+					fgetpos(modified[k], &f2);
+				}
+			}
 			for (int i = 0; i < palette; i++) {
 				fread(&rgbq, sizeof(rgbq), 1, original);
 				BYTE avg[3] = { (rgbq.rgbRed + rgbq.rgbGreen + rgbq.rgbBlue) / 3,
-					(rgbq.rgbRed * r1 + rgbq.rgbGreen * g1 + rgbq.rgbBlue * b1),
-					(rgbq.rgbRed * r2 + rgbq.rgbGreen * g2 + rgbq.rgbBlue * b2) };
+					(rgbq.rgbRed * R1 + rgbq.rgbGreen * G1 + rgbq.rgbBlue * B1),
+					(rgbq.rgbRed * R2 + rgbq.rgbGreen * G2 + rgbq.rgbBlue * B2) };
 				RGBQUAD argbq[3] = { GrayQ(avg[0]), GrayQ(avg[1]), GrayQ(avg[2]) };
 				for (int k = 0; k < N; k++) fwrite(&argbq[k], sizeof(argbq[k]), 1, modified[k]);
 			}

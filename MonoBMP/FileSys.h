@@ -4,8 +4,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-
-
 const char *GEN_FILE_NAME[3] = { "modified_var1.bmp", "modified_var2.bmp", "modified_var3.bmp" };
 const char *ORIG_FILE_NAME = "default.bmp";
 const char *INPUT_FLAG = "--input=";
@@ -47,7 +45,9 @@ int _is_not_opened(FILE *file) {
 }
 
 void _is_folder_correct(char **origin, char **modified) {
+	printf("Generated filenames\n", *origin);
 	printf("%s\n", *origin);
 	for (int i = 0; i < N; i++) printf("%s\n", modified[i]);
+	printf("\n\n");
 }
 #endif
