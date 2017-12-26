@@ -14,9 +14,8 @@ const int N = 3;
 
 void get_path(int argc, char **s, char **origin, char **modified) {
 	*origin = NULL;
-	for (int i = 0; i < N; i++) {
-		modified[i] = NULL;
-	}
+	for (int i = 0; i < N; i++) modified[i] = NULL;
+
 	for (int i = 1; i < argc; i++) {
 		if (strlen(s[i]) >= strlen(INPUT_FLAG) && strncmp(s[i], INPUT_FLAG, strlen(INPUT_FLAG)) == 0) {
 			*origin = (char *)malloc(sizeof(char) * (strlen(s[i]) - strlen(INPUT_FLAG) + 1));
