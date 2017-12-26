@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
 				RGBQUAD argbq[3] = { GrayQ(avg[0]), GrayQ(avg[1]), GrayQ(avg[2]) };
 				for (int k = 0; k < N; k++) fwrite(&argbq[k], sizeof(argbq[k]), 1, modified[k]);
 			}
-
+			/
 			shift(original, modified, bmpHead.bfOffBits);
 
 			for (int i = 0; i < bmpInfo.biHeight; i++) {
