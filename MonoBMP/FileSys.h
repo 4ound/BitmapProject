@@ -50,4 +50,5 @@ void _is_folder_correct(char **origin, char **modified) {
 	for (int i = 0; i < N; i++) printf("%s\n", modified[i]);
 	printf("\n\n");
 }
+
 #endif

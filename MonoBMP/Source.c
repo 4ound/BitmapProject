@@ -9,7 +9,6 @@ RGBTRIPLE rgb;
 BYTE byte;
 
 int main(int argc, char **argv) {
-	//char *s[] = { "--input=monobmp.bmp", "--output=C:Users:wtf" };
 	char *original_path, *modified_path[3];
 	if (argc > 3) ___error(1);
 	get_path(argc, argv, &original_path, modified_path);
@@ -24,7 +23,6 @@ int main(int argc, char **argv) {
 	for (int i = 0; i < N; i++) modified[i] = fopen(modified_path[i], "w+b");
 	for (int i = 0; i < N; i++) free(modified_path[i]);
 	for (int i = 0; i < N; i++) if (_is_not_opened(modified[i])) ___error(3);
-	
 	/*end free block*/
 
 	fread(&bmpHead, sizeof(bmpHead), 1, original);
@@ -39,6 +37,7 @@ int main(int argc, char **argv) {
 
 	switch (bmpInfo.biBitCount) {
 		case 32: {
+			shift(original, modified, bmpHead.bfOffBits);
 			for (int i = 0; i < bmpInfo.biHeight; i++) {
 				for (int j = 0; j < bmpInfo.biWidth; j++) {
 					fread(&rgbq, sizeof(rgbq), 1, original);
@@ -55,6 +54,7 @@ int main(int argc, char **argv) {
 			break;
 		}
 		case 24: {
+			shift(original, modified, bmpHead.bfOffBits);
 			int padding = bmpInfo.biWidth % 4;
 			for (int i = 0; i < bmpInfo.biHeight; i++) {
 				for (int j = 0; j < bmpInfo.biWidth; j++) {
@@ -80,19 +80,11 @@ int main(int argc, char **argv) {
 		case 4:
 		case 2:
 		case 1: {
-			int palette = (1 << bmpInfo.biBitCount);
-			
-			fseek(original, bmpHead.bfOffBits - palette * 4, SEEK_SET);
-			
-			for (int k = 0; k < N; k++) {
-				fpos_t  f1, f2;
-				fgetpos(original, &f1);
-				fgetpos(modified[k], &f2);
-				while (f1 != f2) {
-					fwrite(&byte, sizeof(byte), 1, modified[k]);
-					fgetpos(modified[k], &f2);
-				}
-			}
+			//int palette = (1 << bmpInfo.biBitCount);
+			int palette = bmpInfo.biClrUsed;
+
+			shift(original, modified, sizeof(bmpHead) + bmpInfo.biSize);
+
 			for (int i = 0; i < palette; i++) {
 				fread(&rgbq, sizeof(rgbq), 1, original);
 				BYTE avg[3] = { (rgbq.rgbRed + rgbq.rgbGreen + rgbq.rgbBlue) / 3,
@@ -101,7 +93,9 @@ int main(int argc, char **argv) {
 				RGBQUAD argbq[3] = { GrayQ(avg[0]), GrayQ(avg[1]), GrayQ(avg[2]) };
 				for (int k = 0; k < N; k++) fwrite(&argbq[k], sizeof(argbq[k]), 1, modified[k]);
 			}
-			fseek(original, bmpHead.bfOffBits, SEEK_SET);
+
+			shift(original, modified, bmpHead.bfOffBits);
+
 			for (int i = 0; i < bmpInfo.biHeight; i++) {
 				for (int j = 0; j < amount_bytes(bmpInfo.biBitCount, bmpInfo.biWidth); j++) {
 					fread(&byte, sizeof(byte), 1, original);
